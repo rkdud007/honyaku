@@ -1,3 +1,5 @@
+use std::str::from_utf8;
+
 use crate::token::{lookup_ident, Token, TokenType};
 
 #[derive(Debug)]
@@ -47,9 +49,7 @@ impl LexerTrait for Lexer {
 
         if is_letter(self.ch) {
             token.literal = self.read_identifier();
-            println!("token literal : {}", token.literal);
             token.token_type = lookup_ident(&token.literal);
-            println!("token type : {:#?}", token.token_type);
             return token;
         } else if is_digit(self.ch) {
             token.token_type = TokenType::Int;
@@ -60,17 +60,26 @@ impl LexerTrait for Lexer {
         }
 
         match self.ch {
+            b'+' => token.token_type = TokenType::Plus,
+            b'-' => token.token_type = TokenType::Minus,
+            b'!' => token.token_type = TokenType::Bang,
+            b'*' => token.token_type = TokenType::Asterisk,
+            b'/' => token.token_type = TokenType::Slash,
+
+            b'=' => token.token_type = TokenType::Assign,
             b';' => token.token_type = TokenType::Semicolon,
             b',' => token.token_type = TokenType::Comma,
-            b'+' => token.token_type = TokenType::Plus,
-            b'=' => token.token_type = TokenType::Assign,
-            b'a'..=b'z' | b'A'..=b'Z' => token.token_type = TokenType::Ident,
-            b'0'..=b'9' => token.token_type = TokenType::Int,
+
+            b'<' => token.token_type = TokenType::Lt,
+            b'>' => token.token_type = TokenType::Gt,
+
             b'(' => token.token_type = TokenType::Lparen,
             b')' => token.token_type = TokenType::Rparen,
             b'{' => token.token_type = TokenType::Lbrace,
             b'}' => token.token_type = TokenType::Rbrace,
+
             0 => token.token_type = TokenType::Eof,
+
             _ => token.token_type = TokenType::Illegal,
         }
         self.read_char();
@@ -111,11 +120,9 @@ pub fn is_digit(ch: u8) -> bool {
 }
 
 pub fn generate_new_token(token_type: TokenType, ch: u8) -> Token {
-    let literal = std::str::from_utf8(&[ch]).unwrap().to_string();
-
     Token {
         token_type,
-        literal,
+        literal: from_utf8(&[ch]).unwrap().to_string(),
     }
 }
 
@@ -125,37 +132,82 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-        let input = " let five = 5;";
+        let input = r#"
+        let five = 5;
+        let ten = 10;
 
-        let expected_tokens = vec![
-            Token {
-                token_type: TokenType::Let,
-                literal: String::from("let"),
-            },
-            Token {
-                token_type: TokenType::Ident,
-                literal: String::from("five"),
-            },
-            Token {
-                token_type: TokenType::Assign,
-                literal: String::from("="),
-            },
-            Token {
-                token_type: TokenType::Int,
-                literal: String::from("5"),
-            },
-            Token {
-                token_type: TokenType::Semicolon,
-                literal: String::from(";"),
-            },
-        ];
+        let add = fn(x,y) {
+            x+y;
+        };
+
+        let result = add(five, ten);
+        !-/*5;
+        5 < 10 > 5; 
+        "#;
 
         let mut lexer = Lexer::new(String::from(input));
+        let expected_tokens = vec![
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "five"),
+            (TokenType::Assign, "="),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "ten"),
+            (TokenType::Assign, "="),
+            (TokenType::Int, "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "add"),
+            (TokenType::Assign, "="),
+            (TokenType::Function, "fn"),
+            (TokenType::Lparen, "("),
+            (TokenType::Ident, "x"),
+            (TokenType::Comma, ","),
+            (TokenType::Ident, "y"),
+            (TokenType::Rparen, ")"),
+            (TokenType::Lbrace, "{"),
+            (TokenType::Ident, "x"),
+            (TokenType::Plus, "+"),
+            (TokenType::Ident, "y"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Rbrace, "}"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "result"),
+            (TokenType::Assign, "="),
+            (TokenType::Ident, "add"),
+            (TokenType::Lparen, "("),
+            (TokenType::Ident, "five"),
+            (TokenType::Comma, ","),
+            (TokenType::Ident, "ten"),
+            (TokenType::Rparen, ")"),
+            (TokenType::Semicolon, ";"),
+            // !-/*5;
+            (TokenType::Bang, "!"),
+            (TokenType::Minus, "-"),
+            (TokenType::Slash, "/"),
+            (TokenType::Asterisk, "*"),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            // 5 < 10 > 5;
+            (TokenType::Int, "5"),
+            (TokenType::Lt, "<"),
+            (TokenType::Int, "10"),
+            (TokenType::Gt, ">"),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Eof, "\0"),
+            // ...
+        ];
 
-        for expected_token in expected_tokens {
+        // Then in the test loop:
+
+        for (expected_type, expected_literal) in &expected_tokens {
             let actual_token = lexer.next_token();
-
-            assert_eq!(actual_token, expected_token);
+            println!("{:#?}", actual_token);
+            assert_eq!(actual_token.token_type, *expected_type);
+            assert_eq!(actual_token.literal, *expected_literal);
         }
     }
 }
