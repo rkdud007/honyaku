@@ -17,6 +17,7 @@ trait LexerTrait {
     fn read_identifier(&mut self) -> String;
     fn skip_whitespace(&mut self);
     fn read_number(&mut self) -> String;
+    fn peek_char(&mut self) -> u8;
 }
 
 impl LexerTrait for Lexer {
@@ -62,11 +63,29 @@ impl LexerTrait for Lexer {
         match self.ch {
             b'+' => token.token_type = TokenType::Plus,
             b'-' => token.token_type = TokenType::Minus,
-            b'!' => token.token_type = TokenType::Bang,
+            b'!' => {
+                if self.peek_char() == b'=' {
+                    let ch = self.ch;
+                    self.read_char();
+                    token.literal = format!("{}{}", ch_to_utf8(ch), ch_to_utf8(self.ch));
+                    token.token_type = TokenType::NotEq
+                } else {
+                    token.token_type = TokenType::Bang
+                }
+            }
             b'*' => token.token_type = TokenType::Asterisk,
             b'/' => token.token_type = TokenType::Slash,
 
-            b'=' => token.token_type = TokenType::Assign,
+            b'=' => {
+                if self.peek_char() == b'=' {
+                    let ch = self.ch;
+                    self.read_char();
+                    token.literal = format!("{}{}", ch_to_utf8(ch), ch_to_utf8(self.ch));
+                    token.token_type = TokenType::Eq
+                } else {
+                    token.token_type = TokenType::Assign
+                }
+            }
             b';' => token.token_type = TokenType::Semicolon,
             b',' => token.token_type = TokenType::Comma,
 
@@ -109,6 +128,14 @@ impl LexerTrait for Lexer {
         }
         self.input[position..self.position].to_string()
     }
+
+    fn peek_char(&mut self) -> u8 {
+        if self.read_position >= self.input.len() {
+            return 0;
+        } else {
+            return self.input.as_bytes()[self.read_position];
+        }
+    }
 }
 
 pub fn is_letter(ch: u8) -> bool {
@@ -122,8 +149,12 @@ pub fn is_digit(ch: u8) -> bool {
 pub fn generate_new_token(token_type: TokenType, ch: u8) -> Token {
     Token {
         token_type,
-        literal: from_utf8(&[ch]).unwrap().to_string(),
+        literal: ch_to_utf8(ch),
     }
+}
+
+pub fn ch_to_utf8(ch: u8) -> String {
+    from_utf8(&[ch]).unwrap().to_string()
 }
 
 #[cfg(test)]
@@ -149,6 +180,9 @@ mod tests {
         } else {
             return false;
         }
+
+        10 == 10;
+        10 != 9;
         "#;
 
         let mut lexer = Lexer::new(String::from(input));
@@ -222,6 +256,15 @@ mod tests {
             (TokenType::Semicolon, ";"),
             (TokenType::Rbrace, "}"),
             // ...
+            // New tokens for equality operators:
+            (TokenType::Int, "10"),
+            (TokenType::Eq, "=="),
+            (TokenType::Int, "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int, "10"),
+            (TokenType::NotEq, "!="),
+            (TokenType::Int, "9"),
+            (TokenType::Semicolon, ";"),
             (TokenType::Eof, "\0"),
         ];
 

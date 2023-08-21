@@ -13,6 +13,9 @@ pub enum TokenType {
     Asterisk,
     Slash,
 
+    Eq,
+    NotEq,
+
     Lt,
     Gt,
 
