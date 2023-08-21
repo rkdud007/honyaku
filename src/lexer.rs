@@ -10,7 +10,7 @@ pub struct Lexer {
     ch: u8,
 }
 
-trait LexerTrait {
+pub trait LexerTrait {
     fn new(input: String) -> Lexer;
     fn read_char(&mut self);
     fn next_token(&mut self) -> Token;
