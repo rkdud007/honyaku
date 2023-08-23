@@ -9,6 +9,7 @@ struct Parser {
     lexer: Lexer,
     current_token: Token,
     peek_token: Token,
+    errors: Vec<String>,
 }
 
 impl Parser {
@@ -19,6 +20,7 @@ impl Parser {
             lexer,
             current_token,
             peek_token,
+            errors: vec![],
         }
     }
 
@@ -90,8 +92,20 @@ impl Parser {
             self.next_token();
             true
         } else {
+            self.peak_error(token);
             false
         }
+    }
+
+    fn errors(&mut self) -> Vec<String> {
+        return self.errors.clone();
+    }
+
+    fn peak_error(&mut self, token: TokenType) {
+        self.errors.push(format!(
+            "expected next token to be {}, got {} instead",
+            token, self.peek_token.token_type,
+        ));
     }
 }
 
@@ -104,13 +118,14 @@ mod tests {
         let input = r#"
         let x = 5;
         let y = 10;
-        let foobar = 838383;
+        let  = 838383;
         "#;
 
         let lexer = Lexer::new(input.to_owned());
         let mut parser = Parser::new(lexer);
 
         let program = parser.parse_program();
+        check_parser_errors(&mut parser);
         if program.len() != 3 {
             panic!("Parsed too few statements");
         }
@@ -133,5 +148,17 @@ mod tests {
             return let_stmt.name.value == expected_ident && let_stmt.value == expected_value;
         }
         false
+    }
+
+    fn check_parser_errors(parser: &mut Parser) {
+        let errors = parser.errors();
+
+        if errors.len() == 0 {
+            return;
+        }
+
+        for msg in errors {
+            panic!("Parser error: {}", msg);
+        }
     }
 }

@@ -1,4 +1,6 @@
-#[derive(PartialEq, Debug, Clone)]
+use std::fmt;
+
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum TokenType {
     Illegal,
     Eof,
@@ -34,6 +36,46 @@ pub enum TokenType {
     If,
     Else,
     Return,
+}
+impl fmt::Display for TokenType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self {
+            TokenType::Illegal => write!(f, "ILLEGAL"),
+            TokenType::Eof => write!(f, "EOF"),
+
+            TokenType::Assign => write!(f, "="),
+            TokenType::Plus => write!(f, "+"),
+            TokenType::Minus => write!(f, "-"),
+            TokenType::Bang => write!(f, "!"),
+            TokenType::Asterisk => write!(f, "*"),
+            TokenType::Slash => write!(f, "/"),
+
+            TokenType::Lt => write!(f, "<"),
+            TokenType::Gt => write!(f, ">"),
+
+            TokenType::Eq => write!(f, "="),
+            TokenType::NotEq => write!(f, "!="),
+
+            TokenType::Comma => write!(f, ","),
+
+            TokenType::Semicolon => write!(f, ";"),
+
+            TokenType::Lparen => write!(f, "("),
+            TokenType::Rparen => write!(f, ")"),
+            TokenType::Lbrace => write!(f, "{{"),
+            TokenType::Rbrace => write!(f, "}}"),
+
+            TokenType::Function => write!(f, "fn"),
+            TokenType::Let => write!(f, "let"),
+            TokenType::True => write!(f, "true"),
+            TokenType::False => write!(f, "false"),
+            TokenType::If => write!(f, "if"),
+            TokenType::Else => write!(f, "else"),
+            TokenType::Return => write!(f, "return"),
+            TokenType::Ident => write!(f, "indent"),
+            TokenType::Int => write!(f, "Int"),
+        }
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
