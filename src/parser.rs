@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Identifier, LetStatement, Statement},
+    ast::{Identifier, LetStatement, ReturnStatement, Statement},
     lexer::Lexer,
     token::{Token, TokenType},
 };
@@ -46,6 +46,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Option<Statement> {
         match self.current_token.token_type {
             TokenType::Let => self.parse_let_statement(),
+            TokenType::Return => self.parse_return_statement(),
             _ => None,
         }
     }
@@ -77,6 +78,23 @@ impl Parser {
         };
 
         Some(Statement::Let(stmt))
+    }
+
+    fn parse_return_statement(&mut self) -> Option<Statement> {
+        let current_token = self.current_token.clone();
+
+        self.next_token();
+
+        while !self.peek_token_is(TokenType::Semicolon) {
+            self.next_token();
+        }
+
+        let stmt = ReturnStatement {
+            token: current_token,
+            value: self.current_token.literal.clone(),
+        };
+
+        return Some(Statement::Return(stmt));
     }
 
     fn cur_token_is(&self, token: TokenType) -> bool {
@@ -118,7 +136,7 @@ mod tests {
         let input = r#"
         let x = 5;
         let y = 10;
-        let  = 838383;
+        let foobar = 838383;
         "#;
 
         let lexer = Lexer::new(input.to_owned());
@@ -159,6 +177,34 @@ mod tests {
 
         for msg in errors {
             panic!("Parser error: {}", msg);
+        }
+    }
+
+    #[test]
+    fn test_return_statements() {
+        let input = r#"
+       return 5;
+       return 10;
+       return add(15);
+        "#;
+
+        let lexer = Lexer::new(input.to_owned());
+        let mut parser = Parser::new(lexer);
+
+        let program = parser.parse_program();
+        check_parser_errors(&mut parser);
+
+        if program.len() != 3 {
+            panic!("Parsed too few statements");
+        }
+
+        for statement in &program {
+            match statement {
+                Statement::Let(_) => {}
+                Statement::Return(stmt) => {
+                    println!("{:#?}", stmt);
+                }
+            }
         }
     }
 }
