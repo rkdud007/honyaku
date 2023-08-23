@@ -10,18 +10,8 @@ pub struct Lexer {
     ch: u8,
 }
 
-pub trait LexerTrait {
-    fn new(input: String) -> Lexer;
-    fn read_char(&mut self);
-    fn next_token(&mut self) -> Token;
-    fn read_identifier(&mut self) -> String;
-    fn skip_whitespace(&mut self);
-    fn read_number(&mut self) -> String;
-    fn peek_char(&mut self) -> u8;
-}
-
-impl LexerTrait for Lexer {
-    fn new(input: String) -> Lexer {
+impl Lexer {
+    pub fn new(input: String) -> Lexer {
         let mut l = Lexer {
             input,
             position: 0,
@@ -40,7 +30,7 @@ impl LexerTrait for Lexer {
         self.position = self.read_position;
         self.read_position += 1;
     }
-    fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token {
         let mut token = Token {
             token_type: TokenType::Illegal,
             literal: "".to_string(),

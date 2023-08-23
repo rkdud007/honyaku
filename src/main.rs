@@ -2,7 +2,9 @@ use std::io::stdin;
 
 use crate::repl::start;
 
+mod ast;
 mod lexer;
+mod parser;
 mod repl;
 mod token;
 
