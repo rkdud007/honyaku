@@ -10,3 +10,12 @@ There are pretty good implemention resources that i'm refering and comparing ✨
 - [cymbal](https://github.com/shuhei/cymbal)
 - [Monkey-rust](https://github.com/Rydgel/monkey-rust)
 - [interpreter](https://github.com/0xcacti/interpreter)
+
+## TODO
+
+- [x] Lexing
+- [ ] Paring
+  - [x] Statement
+  - [ ] Expression
+- [ ] Evaluation
+- [ ] Extending
