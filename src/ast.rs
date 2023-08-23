@@ -16,8 +16,8 @@ pub struct LetStatement {
     pub value: String,
 }
 
-// #[derive(Debug)]
-// pub enum Expression {}
+#[derive(Debug)]
+pub enum Expression {}
 
 #[derive(Debug)]
 pub struct Identifier {

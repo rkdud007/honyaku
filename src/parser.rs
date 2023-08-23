@@ -4,6 +4,7 @@ use crate::{
     token::{Token, TokenType},
 };
 
+#[derive(Debug)]
 struct Parser {
     lexer: Lexer,
     current_token: Token,
@@ -55,7 +56,7 @@ impl Parser {
         }
 
         let statement_name = Identifier {
-            token: current_token.clone(),
+            token: self.current_token.clone(),
             value: self.current_token.literal.clone(),
         };
 
@@ -63,14 +64,14 @@ impl Parser {
             return None;
         }
 
-        while !self.cur_token_is(TokenType::Semicolon) {
+        while !self.peek_token_is(TokenType::Semicolon) {
             self.next_token();
         }
 
         let stmt = LetStatement {
             token: current_token,
             name: statement_name,
-            value: "".to_owned(),
+            value: self.current_token.literal.clone(),
         };
 
         Some(Statement::Let(stmt))
@@ -91,5 +92,46 @@ impl Parser {
         } else {
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_let_statements() {
+        let input = r#"
+        let x = 5;
+        let y = 10;
+        let foobar = 838383;
+        "#;
+
+        let lexer = Lexer::new(input.to_owned());
+        let mut parser = Parser::new(lexer);
+
+        let program = parser.parse_program();
+        if program.len() != 3 {
+            panic!("Parsed too few statements");
+        }
+
+        let tests = vec![("x", "5"), ("y", "10"), ("foobar", "838383")];
+
+        let mut i = 0;
+        for (expected_ident, expected_value) in &tests {
+            let stmt = &program[i]; // get next statement
+
+            if !test_let_statement(stmt, expected_ident, expected_value) {
+                panic!("test_let_statement failed");
+            }
+            i += 1;
+        }
+    }
+
+    fn test_let_statement(stmt: &Statement, expected_ident: &str, expected_value: &str) -> bool {
+        if let Statement::Let(let_stmt) = stmt {
+            return let_stmt.name.value == expected_ident && let_stmt.value == expected_value;
+        }
+        false
     }
 }
