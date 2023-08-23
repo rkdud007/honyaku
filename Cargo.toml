@@ -1,5 +1,5 @@
 [package]
-name = "cairo-interpreter"
+name = "honyaku"
 version = "0.1.0"
 edition = "2021"
 
